@@ -171,3 +171,48 @@ class TestProductModel(unittest.TestCase):
         matches = list(Product.find_by_availability(target))
         self.assertEqual(len(matches), sum(p.available == target for p in products))
         self.assertTrue(all(p.available == target for p in matches))
+
+    def test_update_without_id_rejected(self):
+        """An unsaved product cannot be updated."""
+        from service.models import DataValidationError
+        product = ProductFactory()
+        product.id = None
+        with self.assertRaises(DataValidationError):
+            product.update()
+
+    def test_deserialize_bad_availability(self):
+        """Reject a string in place of the availability boolean."""
+        from service.models import DataValidationError
+        data = ProductFactory().serialize()
+        data["available"] = "yes"
+        with self.assertRaises(DataValidationError):
+            Product().deserialize(data)
+
+    def test_deserialize_invalid_category(self):
+        """Reject an invalid category identifier."""
+        from service.models import DataValidationError
+        data = ProductFactory().serialize()
+        data["category"] = "INVALID"
+        with self.assertRaises(DataValidationError):
+            Product().deserialize(data)
+
+    def test_deserialize_missing_name(self):
+        """Reject incomplete product JSON."""
+        from service.models import DataValidationError
+        data = ProductFactory().serialize()
+        del data["name"]
+        with self.assertRaises(DataValidationError):
+            Product().deserialize(data)
+
+    def test_deserialize_non_mapping(self):
+        """Reject a non-dictionary body."""
+        from service.models import DataValidationError
+        with self.assertRaises(DataValidationError):
+            Product().deserialize(None)
+
+    def test_find_product_by_price(self):
+        """Find products with numeric and string price filters."""
+        product = ProductFactory(price=Decimal("12.50"))
+        product.create()
+        self.assertEqual(len(list(Product.find_by_price(Decimal("12.50")))), 1)
+        self.assertEqual(len(list(Product.find_by_price("12.50"))), 1)
