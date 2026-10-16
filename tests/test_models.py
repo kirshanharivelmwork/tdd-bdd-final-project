@@ -104,9 +104,12 @@ class TestProductModel(unittest.TestCase):
     def test_read_a_product(self):
         """Read an existing product by its ID."""
         product = ProductFactory()
+        product.id = None
         product.create()
+        self.assertIsNotNone(product.id)
         found = Product.find(product.id)
         self.assertIsNotNone(found)
+        self.assertEqual(found.id, product.id)
         self.assertEqual(found.name, product.name)
         self.assertEqual(found.description, product.description)
         self.assertEqual(Decimal(found.price), product.price)
@@ -118,12 +121,13 @@ class TestProductModel(unittest.TestCase):
         product = ProductFactory()
         product.create()
         product_id = product.id
-        product.description = "Updated product description"
+        product.description = "testing"
         product.update()
         self.assertEqual(product.id, product_id)
         products = Product.all()
         self.assertEqual(len(products), 1)
-        self.assertEqual(products[0].description, "Updated product description")
+        self.assertEqual(products[0].id, product_id)
+        self.assertEqual(products[0].description, "testing")
 
     def test_delete_a_product(self):
         """Remove a product from the database."""
