@@ -125,11 +125,11 @@ def step_see_in_results(context, text_string):
     assert found
 
 
-@then('I should not see "{text_string}" in the results')
-def step_not_see_in_results(context, text_string):
+@then('I should not see "{name}" in the results')
+def step_not_see_in_results(context, name):
     """Check search results do not contain unwanted text."""
     results = context.driver.find_element(By.ID, "search_results")
-    assert text_string not in results.text
+    assert name not in results.text
 
 
 @then('I should see the message "{message}"')
