@@ -177,12 +177,14 @@ class TestProductRoutes(TestCase):
 
     def test_update_product(self):
         """Update an existing product."""
-        product = self._create_products()[0]
-        payload = product.serialize()
-        payload["description"] = "Updated description"
-        response = self.client.put(f"{BASE_URL}/{product.id}", json=payload)
+        product = ProductFactory()
+        response = self.client.post(BASE_URL, json=product.serialize())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        updated_data = response.get_json()
+        updated_data["description"] = "unknown"
+        response = self.client.put(f"{BASE_URL}/{updated_data['id']}", json=updated_data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.get_json()["description"], "Updated description")
+        self.assertEqual(response.get_json()["description"], "unknown")
 
     def test_update_product_not_found(self):
         """Return 404 when updating an unknown product."""
@@ -213,9 +215,10 @@ class TestProductRoutes(TestCase):
 
     def test_list_all_products(self):
         """List all products."""
-        self.assertEqual(self.get_product_count(), 0)
         self._create_products(5)
-        self.assertEqual(self.get_product_count(), 5)
+        response = self.client.get(BASE_URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.get_json()), 5)
 
     def test_list_by_name(self):
         """Filter products by exact name."""
